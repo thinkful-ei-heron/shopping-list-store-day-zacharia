@@ -1,3 +1,5 @@
+'use strict';
+
 const store = {
   items: [
     { id: cuid(), name: 'apples', checked: false },
@@ -5,7 +7,8 @@ const store = {
     { id: cuid(), name: 'milk', checked: true },
     { id: cuid(), name: 'bread', checked: false }
   ],
-  hideCheckedItems: false
+  hideCheckedItems: false,
+  edit: 0
 };
 
 const generateItemElement = function (item) {
@@ -15,8 +18,10 @@ const generateItemElement = function (item) {
      <span class='shopping-item'>${item.name}</span>
     `;
   }
-
-  return `
+  if (item.id === store.edit) {
+    itemTitle = `<input type='text' name='editbox' value='${item.name}' class='shopping-item update'></input>`;
+  }
+  let result = `
     <li class='js-item-element' data-item-id='${item.id}'>
       ${itemTitle}
       <div class='shopping-item-controls'>
@@ -26,8 +31,12 @@ const generateItemElement = function (item) {
         <button class='shopping-item-delete js-item-delete'>
           <span class='button-label'>delete</span>
         </button>
+        <button class='shopping-item-edit js-item-edit'>
+          <span class='button-label'>edit</span>
+        </button>
       </div>
     </li>`;
+    return result;
 };
 
 const generateShoppingItemsString = function (shoppingList) {
@@ -88,6 +97,25 @@ const handleItemCheckClicked = function () {
     render();
   });
 };
+
+const handleItemEditClicked = function () {
+  $('.js-shopping-list').on('click', '.js-item-edit', event => {
+    store.edit = getItemIdFromElement(event.currentTarget);
+    render();
+  });
+}
+
+const updateItem = function () {
+  $('.js-shopping-list').on('keypress', '.update', event => {
+    if (event.keyCode === 13) {
+      const id = getItemIdFromElement(event.currentTarget);
+      const foundItem = store.items.find(item => item.id === id);
+      foundItem.name = event.currentTarget.value;
+      store.edit = 0;
+      render();
+    }
+  });
+}
 
 const getItemIdFromElement = function (item) {
   return $(item)
@@ -160,6 +188,8 @@ const handleShoppingList = function () {
   handleItemCheckClicked();
   handleDeleteItemClicked();
   handleToggleFilterClick();
+  handleItemEditClicked();
+  updateItem();
 };
 
 // when the page loads, call `handleShoppingList`
